@@ -1,51 +1,47 @@
 package com.diploma.mindsupport.controller;
 
-import com.diploma.mindsupport.dto.RegisterRequest;
-import com.diploma.mindsupport.dto.UpdateUserInfoRequest;
+import com.diploma.mindsupport.dto.ImageDto;
+import com.diploma.mindsupport.dto.UserInfoDto;
 import com.diploma.mindsupport.dto.UserProfileInfoResponse;
+import com.diploma.mindsupport.service.UserInfoService;
 import com.diploma.mindsupport.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/v1/user")
 @RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
+    private final UserInfoService userInfoService;
 
     @GetMapping("/me")
-//    @PreAuthorize("hasRole('PATIENT') or hasRole('VOLUNTEER')")
-    public ResponseEntity<UserProfileInfoResponse> getCurrentUserProfileInfo() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String username = authentication.getName();
-        throwIfNotAuthorized(username);
-        return ResponseEntity.ok(userService.getUserProfileInfo(username));
+    public ResponseEntity<UserProfileInfoResponse> getCurrentUserProfileInfo(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(userService.getUserProfileInfo(userDetails.getUsername()));
     }
 
     @GetMapping("/{username}")
     public ResponseEntity<UserProfileInfoResponse> getUserProfileInfo(@PathVariable("username") String username) {
-        // todo: consider additional security
         return ResponseEntity.ok(userService.getUserProfileInfo(username));
     }
 
-    @PutMapping("/me")
+    @PatchMapping("/me")
     public ResponseEntity<String> updateCurrentUser(
-            @RequestBody UpdateUserInfoRequest request) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        throwIfNotAuthorized(authentication.getName());
-        userService.updateUserInfo(request);
-        return ResponseEntity.ok("User successfully created!");
+            @RequestBody UserInfoDto userInfoDto,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        userService.updateUserInfo(userInfoDto, userDetails.getUsername());
+        return ResponseEntity.ok("User successfully updated!");
     }
 
-    private void throwIfNotAuthorized(String username) {
-        if (Objects.isNull(username)) {
-            throw new AccessDeniedException("You are not authorized to access this resource");
-        }
+    @PatchMapping("/me/photo")
+    public ResponseEntity<String> updateCurrentUserPhoto(
+            @RequestBody ImageDto imageDto,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        userInfoService.updateUserPhoto(imageDto, userDetails.getUsername());
+        return ResponseEntity.ok("User photo successfully updated!");
     }
 }
