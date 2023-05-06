@@ -5,6 +5,7 @@ import com.diploma.mindsupport.model.User;
 import com.diploma.mindsupport.model.UserRole;
 import org.mapstruct.AfterMapping;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -14,8 +15,8 @@ import java.util.Collections;
 public interface RegisterRequestMapper {
 
     @AfterMapping
-    default void setGrantedAuthorities(@MappingTarget User.UserBuilder user, UserRole userRole) {
-        user.grantedAuthorities(Collections.singleton(userRole));
+    default void setGrantedAuthorities(@MappingTarget User.UserBuilder user, RegisterRequest registerRequest) {
+        user.grantedAuthorities(Collections.singleton(UserRole.valueOf(registerRequest.getUserRoleDto().name())));
     }
 
     @AfterMapping
@@ -23,5 +24,6 @@ public interface RegisterRequestMapper {
         user.password(passwordEncoder.encode(registerRequest.getPassword()));
     }
 
-    User registerRequestToUser(RegisterRequest registerRequest, UserRole userRole, PasswordEncoder passwordEncoder);
+    @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
+    User registerRequestToUser(RegisterRequest registerRequest, PasswordEncoder passwordEncoder);
 }
