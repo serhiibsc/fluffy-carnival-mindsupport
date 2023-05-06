@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -41,17 +42,21 @@ public class User implements UserDetails {
     @Column(unique = true, name = "email")
     private String email;
     private String password;
+    private String firstName;
+    private String lastName;
+    @Column
+    private LocalDateTime createdAt = LocalDateTime.now();
+
 
     @OneToOne(
-            cascade = CascadeType.ALL,
-            fetch = FetchType.LAZY,
-            optional = false)
+            cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+            fetch = FetchType.LAZY)
     @JoinColumn(
             name = "user_id",
             referencedColumnName = "userId")
     private UserInfo userInfo;
 
-    @ElementCollection(targetClass = UserRole.class, fetch = FetchType.LAZY)
+    @ElementCollection(targetClass = UserRole.class, fetch = FetchType.EAGER)
     @CollectionTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "userId"))
     @Enumerated(EnumType.STRING)
     private Set<? extends GrantedAuthority> grantedAuthorities;
@@ -92,5 +97,15 @@ public class User implements UserDetails {
     @Override
     public String getPassword() {
         return password;
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "userId=" + userId +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' + '}';
     }
 }
