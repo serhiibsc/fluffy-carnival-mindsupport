@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Data
 @Builder
@@ -21,9 +22,8 @@ public class UserProfileInfoResponse {
     private String city;
     private String country;
 
-    private ImageDto image;
-
     private String username;
     private String email;
     private UserRole userRole;
+    private List<Integer> imageList;
 }

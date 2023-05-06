@@ -24,19 +24,20 @@ public class UserInfo implements Serializable {
     @Id
     private Long userId;
 
-    private String firstName;
-    private String lastName;
-    private String phone;
+    @OneToOne(
+            cascade = CascadeType.ALL,
+            fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", referencedColumnName = "userId")
+    private User user;
+
     private LocalDate dateOfBirth;
     @Enumerated(EnumType.STRING)
     private Gender gender;
-
-    @Column(columnDefinition = "TIMESTAMP DEFAULT CURRENT_TIMESTAMP")
-    private LocalDateTime createdAt;
     private String language;
     private String about;
     private String city;
     private String country;
+    private String phone;
 
     @OneToOne(
             cascade = CascadeType.ALL,

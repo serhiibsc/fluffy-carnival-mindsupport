@@ -2,34 +2,55 @@ package com.diploma.mindsupport.mapper;
 
 import com.diploma.mindsupport.dto.UserInfoDto;
 import com.diploma.mindsupport.dto.UserProfileInfoResponse;
+import com.diploma.mindsupport.model.Image;
 import com.diploma.mindsupport.model.User;
 import com.diploma.mindsupport.model.UserInfo;
+import com.diploma.mindsupport.model.UserRole;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.factory.Mappers;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface UserInfoMapper {
-    UserInfoMapper INSTANCE = Mappers.getMapper(UserInfoMapper.class);
-
-    @Mapping(target = "photo.data",
-            expression = "java(userInfoDto.getImageBase64Data() != null ? java.util.Base64.getDecoder().decode(userInfoDto.getImageBase64Data()) : null)")
     UserInfo userInfoDtoToUserInfo(UserInfoDto userInfoDto);
 
-    @Mapping(target = "firstName", source = "user.userInfo.firstName")
-    @Mapping(target = "lastName", source = "user.userInfo.lastName")
-    @Mapping(target = "phone", source = "user.userInfo.phone")
-    @Mapping(target = "dateOfBirth", source = "user.userInfo.dateOfBirth", dateFormat = "dd-MM-yyyy")
-    @Mapping(target = "gender", source = "user.userInfo.gender")
-    @Mapping(target = "language", source = "user.userInfo.language")
-    @Mapping(target = "country", source = "user.userInfo.country")
-    @Mapping(target = "city", source = "user.userInfo.city")
-    @Mapping(target = "about", source = "user.userInfo.about")
-    @Mapping(target = "image.base64Data",
-            expression = "java(user.getUserInfo().getPhoto().getData() != null ? java.util.Base64.getEncoder().encodeToString(user.getUserInfo().getPhoto().getData()) : null)")
-    @Mapping(target = "username", source = "user.username")
-    @Mapping(target = "email", source = "user.email")
-    @Mapping(target = "userRole",
-            expression = "java((user.getAuthorities() != null && !user.getAuthorities().isEmpty()) ? (com.diploma.mindsupport.model.UserRole) user.getAuthorities().iterator().next() : null)")
-    UserProfileInfoResponse userToUserProfileInfo(User user);
+    default UserProfileInfoResponse userToUserProfileInfo(User user) {
+        if (user == null) {
+            return null;
+        }
+
+        UserProfileInfoResponse.UserProfileInfoResponseBuilder userProfileInfoResponse = UserProfileInfoResponse.builder();
+
+        userProfileInfoResponse.dateOfBirth(user.getUserInfo().getDateOfBirth());
+        userProfileInfoResponse.gender(user.getUserInfo().getGender());
+        userProfileInfoResponse.language(user.getUserInfo().getLanguage());
+        userProfileInfoResponse.country(user.getUserInfo().getCountry());
+        userProfileInfoResponse.city(user.getUserInfo().getCity());
+        userProfileInfoResponse.about(user.getUserInfo().getAbout());
+        userProfileInfoResponse.username(user.getUsername());
+        userProfileInfoResponse.email(user.getEmail());
+        userProfileInfoResponse.firstName(user.getFirstName());
+        userProfileInfoResponse.lastName(user.getLastName());
+        userProfileInfoResponse.userRole(userToUserRole(user));
+        userProfileInfoResponse.imageList(userPhotoToImageList(user.getUserInfo().getPhoto()));
+
+        return userProfileInfoResponse.build();
+    }
+
+    private List<Integer> userPhotoToImageList(Image photo) {
+        byte[] imageByteArray = photo.getData();
+        List<Integer> imageList = new ArrayList<>(imageByteArray.length);
+        for (byte b : imageByteArray) {
+            imageList.add((int) b & 0xFF);
+        }
+        return imageList;
+    }
+
+    private UserRole userToUserRole(User user) {
+        if (user.getAuthorities() == null || user.getAuthorities().isEmpty()) {
+            return null;
+        }
+        return (UserRole) user.getAuthorities().iterator().next();
+    }
 }
