@@ -25,7 +25,7 @@ public class UserService {
     private final UserInfoMapperImpl userInfoMapper;
 
     public void updateUserInfo(UserInfoDto userInfoDto, String username) {
-        User user = getUserOrThrow(username);
+        User user = getUserByUsernameOrThrow(username);
         UserInfo userInfo = userInfoMapper.userInfoDtoToUserInfo(userInfoDto);
         userInfo.setUserId(user.getUserId());
         user.setUserInfo(userInfo);
@@ -33,7 +33,7 @@ public class UserService {
     }
 
     public UserProfileInfoResponse getUserProfileInfo(String username) {
-        User user = getUserOrThrow(username);
+        User user = getUserByUsernameOrThrow(username);
         return userInfoMapper.userToUserProfileInfo(user);
     }
 
@@ -46,7 +46,7 @@ public class UserService {
         userRepository.save(user);
     }
 
-    public User getUserOrThrow(String username) {
+    public User getUserByUsernameOrThrow(String username) {
         Optional<User> userOptional = userRepository.findByUsername(username);
         if (userOptional.isEmpty()) {
             throw new IllegalArgumentException();

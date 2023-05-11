@@ -8,11 +8,8 @@ import lombok.RequiredArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
-/**
- * TODO: add availability hours to scheduling service
- */
+
 @Data
 @Builder
 @AllArgsConstructor

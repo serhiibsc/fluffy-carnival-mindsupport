@@ -21,7 +21,7 @@ public class UserInfoService {
     private final ImageMapper imageMapper;
 
     public void updateUserPhoto(ImageDto imageDto, String username) {
-        User user = userService.getUserOrThrow(username);
+        User user = userService.getUserByUsernameOrThrow(username);
         UserInfo userInfo;
         if (Objects.nonNull(user.getUserInfo())) {
             userInfo = user.getUserInfo();
