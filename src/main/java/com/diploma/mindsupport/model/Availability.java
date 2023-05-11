@@ -8,8 +8,7 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
 import java.io.Serializable;
-import java.time.LocalDate;
-import java.time.LocalTime;
+import java.time.ZonedDateTime;
 
 @Data
 @Builder
@@ -31,12 +30,12 @@ public class Availability implements Serializable {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Column(nullable = false)
-    private LocalDate date;
-
     @Column(name = "start_time", nullable = false)
-    private LocalTime startTime;
+    private ZonedDateTime startDateTime;
 
     @Column(name = "end_time", nullable = false)
-    private LocalTime endTime;
+    private ZonedDateTime endDateTime;
+
+    private AvailabilityRecurrence recurrence;
+    private ZonedDateTime recurrenceEndDate;
 }
