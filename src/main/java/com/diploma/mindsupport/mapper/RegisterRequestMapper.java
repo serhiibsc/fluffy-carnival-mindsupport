@@ -24,6 +24,6 @@ public interface RegisterRequestMapper {
         user.password(passwordEncoder.encode(registerRequest.getPassword()));
     }
 
-    @Mapping(target = "createdAt", expression = "java(java.time.LocalDateTime.now())")
+    @Mapping(target = "createdAt", expression = "java(java.time.ZonedDateTime.now())")
     User registerRequestToUser(RegisterRequest registerRequest, PasswordEncoder passwordEncoder);
 }
