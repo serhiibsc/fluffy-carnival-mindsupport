@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -45,7 +45,7 @@ public class User implements UserDetails {
     private String firstName;
     private String lastName;
     @Column
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private ZonedDateTime createdAt = ZonedDateTime.now();
 
 
     @OneToOne(
@@ -63,6 +63,9 @@ public class User implements UserDetails {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<Availability> availabilities = new ArrayList<>();
+
+    @OneToMany(mappedBy = "scheduledBy", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Appointment> scheduledAppointments = new ArrayList<>();
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
