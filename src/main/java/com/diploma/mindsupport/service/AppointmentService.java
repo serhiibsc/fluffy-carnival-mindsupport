@@ -2,6 +2,7 @@ package com.diploma.mindsupport.service;
 
 import com.diploma.mindsupport.dto.AppointmentDtoResponse;
 import com.diploma.mindsupport.dto.CreateAppointmentRequest;
+import com.diploma.mindsupport.dto.UpdateAppointmentRequest;
 import com.diploma.mindsupport.mapper.AppointmentMapper;
 import com.diploma.mindsupport.model.Appointment;
 import com.diploma.mindsupport.model.User;
@@ -10,25 +11,23 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.ZonedDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class AppointmentService {
-
     private final AppointmentRepository appointmentRepository;
     private final UserService userService;
     private final AppointmentMapper appointmentMapper;
-    private final ZoomService zoomService;
+    private final AvailabilityService availabilityService;
 
-    public List<Appointment> getAllAppointments() {
-        return appointmentRepository.findAll();
+    public Optional<Appointment> getAppointmentById(Long id) {
+        return appointmentRepository.findById(id);
     }
 
     public List<AppointmentDtoResponse> getAllAppointmentsByUsername(String username) {
@@ -37,25 +36,33 @@ public class AppointmentService {
         return appointmentMapper.toAppointmentDto(appointments);
     }
 
-    public Optional<Appointment> getAppointmentById(Long id) {
-        return appointmentRepository.findById(id);
-    }
+    // todo: get appointments scheduled only by some user
+    // todo: get appointments where attendees given users
 
     public AppointmentDtoResponse createAppointmentByCurrentlyAuthorizedUser(
-            CreateAppointmentRequest createAppointmentRequest, String currentlyAuthorizedUsername) {
-        Appointment appointment = createAppointment(createAppointmentRequest, currentlyAuthorizedUsername);
-        // todo: 1. check availability. 2. check already scheduled meetings
+            CreateAppointmentRequest request, String currentUsername) {
+        User user = userService.getUserByUsernameOrThrow(currentUsername);
+        Appointment appointment = buildAppointment(request, user);
+        ZonedDateTime endTime = appointment.getStartTime().plus(appointment.getDuration());
+
+        checkIfUsersCanHaveAppointment(appointment, endTime);
         return appointmentMapper.toAppointmentDto(appointmentRepository.save(appointment));
     }
 
-    public Appointment updateAppointment(Long id, Appointment appointment) {
-        Optional<Appointment> existingAppointmentOptional = appointmentRepository.findById(id);
-        if (existingAppointmentOptional.isEmpty()) {
+    public AppointmentDtoResponse updateAppointment(Long id, UpdateAppointmentRequest updateAppointmentRequest) {
+        Optional<Appointment> appointmentOptional = appointmentRepository.findById(id);
+        if (appointmentOptional.isEmpty()) {
             throw new IllegalArgumentException(String.format("Appointment %d not found", id));
         }
-        appointment.setAppointmentId(id);
-        // todo: update zoom meeting
-        return appointmentRepository.save(appointment);
+        Appointment appointment = appointmentOptional.get();
+
+        appointment.setStartTime(updateAppointmentRequest.getStartTime());
+        appointment.setDuration(updateAppointmentRequest.getDuration());
+        appointment.setAttendees(getAttendeesByUsernames(updateAppointmentRequest.getAttendeesUsernames()));
+
+        ZonedDateTime endTime = appointment.getStartTime().plus(appointment.getDuration());
+        checkIfUsersCanHaveAppointment(appointment, endTime);
+        return appointmentMapper.toAppointmentDto(appointmentRepository.save(appointment));
     }
 
     public void deleteAppointment(Long id) {
@@ -63,45 +70,48 @@ public class AppointmentService {
         appointmentRepository.deleteById(id);
     }
 
-    public void addAttendee(Long appointmentId, String username) {
-        Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new IllegalArgumentException(String.format("Appointment %d not found", appointmentId)));
-        User user = userService.getUserByUsernameOrThrow(username);
+    public boolean doesUserHaveAppointment(User user, ZonedDateTime startTime, ZonedDateTime endTime) {
+        List<Appointment> appointments = appointmentRepository.getAppointmentsByAttendeesContains(user);;
+        for (Appointment appointment : appointments) {
+            boolean appointmentStartBeforeEndTime = appointment.getStartTime().isBefore(endTime);
+            boolean appointmentEndIsAfterStartTime = appointment.getStartTime().plus(appointment.getDuration())
+                    .isAfter(startTime);
+            boolean appointmentIntercepts = appointmentStartBeforeEndTime && appointmentEndIsAfterStartTime;
 
-        appointment.getAttendees().add(user);
-        appointmentRepository.save(appointment);
+            return appointmentIntercepts;
+        }
+
+        return false;
     }
 
-    private Appointment createAppointment(CreateAppointmentRequest createAppointmentRequest, String currentUsername) {
-        User currentUser = userService.getUserByUsernameOrThrow(currentUsername);
+    private Appointment buildAppointment(CreateAppointmentRequest createAppointmentRequest, User user) {
         Appointment appointment = appointmentMapper.toAppointment(createAppointmentRequest);
-        appointment.setAttendees(new TreeSet<>(Comparator.comparing(User::getUsername)));
-        for (String username : createAppointmentRequest.getAttendeesUsernames()) {
-            appointment.getAttendees().add(userService.getUserByUsernameOrThrow(username));
-        }
-        appointment.setScheduledBy(currentUser);
+        appointment.setAttendees(getAttendeesByUsernames(createAppointmentRequest.getAttendeesUsernames()));
+        appointment.setScheduledBy(user);
 
-        String response = getCreateZoomMeetingResponse(currentUser, createAppointmentRequest, zoomService);
-
-        appointment.setZoomLink(getZoomLink(response));
-        appointment.setZoomMeetingId(0L);// todo: set correct id
+        // todo: set Zoom stuff
         return appointment;
     }
 
-    private String getCreateZoomMeetingResponse(User user, CreateAppointmentRequest request, ZoomService zoomService) {
-        return zoomService.createMeeting(
-                user.getUserId().toString(),
-                "",
-                request.getStartTime(),
-                request.getDuration()).toString();
+    private TreeSet<User> getAttendeesByUsernames(List<String> attendeesUsernames) {
+        TreeSet<User> attendees = new TreeSet<>(Comparator.comparing(User::getUsername));
+        for (String username : attendeesUsernames) {
+            attendees.add(userService.getUserByUsernameOrThrow(username));
+        }
+        return attendees;
     }
 
-    private String getZoomLink(String response) {
-        // todo: set correct regex
-        Matcher matcher = Pattern.compile("").matcher(response);
-        if (matcher.find()) {
-            return matcher.group(1);
+    private void checkIfUsersCanHaveAppointment(Appointment appointment, ZonedDateTime endTime) {
+        for (User u : appointment.getAttendees()) {
+            if (!availabilityService.isUserAvailable(u, appointment.getStartTime(), endTime)) {
+                throw new IllegalStateException(
+                        String.format("The user %s is not available at the requested time.", u.getUsername()) );
+            }
+            if (doesUserHaveAppointment(u, appointment.getStartTime(), endTime)) {
+                throw new IllegalStateException(
+                        String.format("The user %s already has an appointment at the requested time.", u.getUsername())
+                );
+            }
         }
-        return null;
     }
 }
