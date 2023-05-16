@@ -35,11 +35,30 @@ public class Appointment implements Serializable {
 
     @Column(columnDefinition = "timestamptz")
     private ZonedDateTime startTime;
-    @Column(columnDefinition = "interval")
+
+    @Transient
     private Duration duration;
 
+    @Column(name = "duration")
+    private Long durationSeconds;
+
+    @PrePersist
+    @PreUpdate
+    public void prePersist() {
+        if (duration != null) {
+            durationSeconds = duration.getSeconds();
+        }
+    }
+
+    @PostLoad
+    public void postLoad() {
+        if (durationSeconds != null) {
+            duration = Duration.ofSeconds(durationSeconds);
+        }
+    }
+
     @Column(columnDefinition = "timestamp")
-    private ZonedDateTime createdAt = ZonedDateTime.now();
+    private final ZonedDateTime createdAt = ZonedDateTime.now();
 
     private String zoomLink;
     private Long zoomMeetingId;

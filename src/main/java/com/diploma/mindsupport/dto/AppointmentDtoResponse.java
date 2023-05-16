@@ -10,6 +10,7 @@ import java.util.Set;
 @Data
 @Builder
 public class AppointmentDtoResponse {
+    private Long appointmentId;
     private ZonedDateTime dateTime;
     private Duration duration;
     private ZonedDateTime createdAt;

@@ -26,8 +26,13 @@ public class AppointmentService {
     private final AppointmentMapper appointmentMapper;
     private final AvailabilityService availabilityService;
 
-    public Optional<Appointment> getAppointmentById(Long id) {
-        return appointmentRepository.findById(id);
+    public AppointmentDtoResponse getAppointmentById(Long id, String username) {
+        Optional<Appointment> appointmentOptional = appointmentRepository.findById(id);
+        User user = userService.getUserByUsernameOrThrow(username);
+        if (appointmentOptional.isEmpty() || !appointmentOptional.get().getAttendees().contains(user)) {
+            throw new IllegalStateException("User is not authorized for this request");
+        }
+        return appointmentMapper.toAppointmentDto(appointmentOptional.get());
     }
 
     public List<AppointmentDtoResponse> getAllAppointmentsByUsername(String username) {
@@ -39,9 +44,8 @@ public class AppointmentService {
     // todo: get appointments scheduled only by some user
     // todo: get appointments where attendees given users
 
-    public AppointmentDtoResponse createAppointmentByCurrentlyAuthorizedUser(
-            CreateAppointmentRequest request, String currentUsername) {
-        User user = userService.getUserByUsernameOrThrow(currentUsername);
+    public AppointmentDtoResponse createAppointmentForUser(CreateAppointmentRequest request, String username) {
+        User user = userService.getUserByUsernameOrThrow(username);
         Appointment appointment = buildAppointment(request, user);
         ZonedDateTime endTime = appointment.getStartTime().plus(appointment.getDuration());
 
@@ -49,12 +53,15 @@ public class AppointmentService {
         return appointmentMapper.toAppointmentDto(appointmentRepository.save(appointment));
     }
 
-    public AppointmentDtoResponse updateAppointment(Long id, UpdateAppointmentRequest updateAppointmentRequest) {
+    public AppointmentDtoResponse updateAppointment(Long id, UpdateAppointmentRequest updateAppointmentRequest, String username) {
         Optional<Appointment> appointmentOptional = appointmentRepository.findById(id);
         if (appointmentOptional.isEmpty()) {
             throw new IllegalArgumentException(String.format("Appointment %d not found", id));
         }
         Appointment appointment = appointmentOptional.get();
+        if (!username.equals(appointment.getScheduledBy().getUsername())) {
+            throw new IllegalStateException("User is not authorized for this request");
+        }
 
         appointment.setStartTime(updateAppointmentRequest.getStartTime());
         appointment.setDuration(updateAppointmentRequest.getDuration());
@@ -66,12 +73,14 @@ public class AppointmentService {
     }
 
     public void deleteAppointment(Long id) {
+        Appointment availability = appointmentRepository.findById(id).orElseThrow(
+                () -> new IllegalArgumentException("Appointment not found"));
+        appointmentRepository.delete(availability);
         // todo: delete zoom meeting
-        appointmentRepository.deleteById(id);
     }
 
     public boolean doesUserHaveAppointment(User user, ZonedDateTime startTime, ZonedDateTime endTime) {
-        List<Appointment> appointments = appointmentRepository.getAppointmentsByAttendeesContains(user);;
+        List<Appointment> appointments = appointmentRepository.getAppointmentsByAttendeesContains(user);
         for (Appointment appointment : appointments) {
             boolean appointmentStartBeforeEndTime = appointment.getStartTime().isBefore(endTime);
             boolean appointmentEndIsAfterStartTime = appointment.getStartTime().plus(appointment.getDuration())

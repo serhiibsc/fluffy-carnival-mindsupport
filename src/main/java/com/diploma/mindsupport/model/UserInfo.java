@@ -1,10 +1,7 @@
 package com.diploma.mindsupport.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 
 import java.io.Serializable;
 import java.time.LocalDate;
@@ -21,6 +18,7 @@ public class UserInfo implements Serializable {
     @Id
     private Long userId;
 
+    @EqualsAndHashCode.Exclude
     @OneToOne(
             cascade = CascadeType.ALL,
             fetch = FetchType.LAZY)
@@ -36,6 +34,7 @@ public class UserInfo implements Serializable {
     private String country;
     private String phone;
 
+    @EqualsAndHashCode.Exclude
     @OneToOne(
             cascade = CascadeType.ALL,
             fetch = FetchType.LAZY)

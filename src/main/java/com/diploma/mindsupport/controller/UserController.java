@@ -1,12 +1,14 @@
 package com.diploma.mindsupport.controller;
 
 import com.diploma.mindsupport.dto.*;
+import com.diploma.mindsupport.service.AppointmentService;
 import com.diploma.mindsupport.service.AvailabilityService;
 import com.diploma.mindsupport.service.UserInfoService;
 import com.diploma.mindsupport.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +25,7 @@ public class UserController {
     private final UserService userService;
     private final UserInfoService userInfoService;
     private final AvailabilityService availabilityService;
+    private final AppointmentService appointmentService;
 
     @GetMapping("/me")
     public ResponseEntity<UserProfileInfoResponse> getCurrentUserProfileInfo(
@@ -51,33 +54,47 @@ public class UserController {
         return ResponseEntity.ok("User photo successfully updated!");
     }
 
+    @PreAuthorize("authentication.principal.username == #username")
     @GetMapping("/{username}/availabilities")
     public ResponseEntity<List<AvailabilityDtoResponse>> getAvailabilitiesForUser(
             @PathVariable("username") String username,
-            @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam("from") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime zonedTimeFrom,
             @RequestParam("to") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) ZonedDateTime zonedTimeTo) {
-        if (!username.equals(userDetails.getUsername())) {
-            throw new IllegalStateException("User is not authorized for this request");
-        }
         List<AvailabilityDtoResponse> response =
                 availabilityService.getAvailabilitiesForUser(username, zonedTimeFrom, zonedTimeTo);
         return ResponseEntity.ok(response);
     }
 
+    @PreAuthorize("authentication.principal.username == #username")
     @PatchMapping("/{username}/availabilities")
     public ResponseEntity<AvailabilityDtoResponse> createAvailability(
             @PathVariable("username") String username,
-            @RequestBody CreateAvailabilityRequest createAvailabilityRequest,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        if (!username.equals(userDetails.getUsername())) {
-            throw new IllegalStateException("User is not authorized for this request");
-        }
+            @RequestBody CreateAvailabilityRequest createAvailabilityRequest) {
         AvailabilityDtoResponse response = availabilityService.createAvailabilityForUser(
                 username, createAvailabilityRequest);
         URI location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{id}")
                 .buildAndExpand(response.getAvailabilityId())
+                .toUri();
+        return ResponseEntity.created(location).body(response);
+    }
+
+    @PreAuthorize("authentication.principal.username == #username")
+    @GetMapping("/{username}/appointments")
+    public ResponseEntity<List<AppointmentDtoResponse>> getUserAppointments(
+            @PathVariable("username") String username) {
+        return ResponseEntity.ok(appointmentService.getAllAppointmentsByUsername(username));
+    }
+
+    @PreAuthorize("authentication.principal.username == #username")
+    @PatchMapping("/{username}/appointments")
+    public ResponseEntity<AppointmentDtoResponse> createAppointment(
+            @PathVariable("username") String username,
+            @RequestBody CreateAppointmentRequest request) {
+        AppointmentDtoResponse response = appointmentService.createAppointmentForUser(request, username);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(response.getAppointmentId())
                 .toUri();
         return ResponseEntity.created(location).body(response);
     }

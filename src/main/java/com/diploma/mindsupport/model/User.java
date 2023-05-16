@@ -1,10 +1,7 @@
 package com.diploma.mindsupport.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -47,7 +44,7 @@ public class User implements UserDetails {
     @Column
     private ZonedDateTime createdAt = ZonedDateTime.now();
 
-
+    @EqualsAndHashCode.Exclude
     @OneToOne(
             cascade = {CascadeType.PERSIST, CascadeType.MERGE},
             fetch = FetchType.LAZY)
