@@ -28,7 +28,6 @@ public class AvailabilityService {
 
     public AvailabilityDtoResponse createAvailabilityForUser(
             String username, CreateAvailabilityRequest createAvailabilityRequest) {
-        checkIfUserCanActOrThrow(username, createAvailabilityRequest.getUsername());
         Availability availability = availabilityMapper.toAvailability(createAvailabilityRequest);
         User user = userService.getUserByUsernameOrThrow(username);
         isUserAvailable(user, availability.getStartDateTime(), availability.getEndDateTime());
@@ -36,11 +35,9 @@ public class AvailabilityService {
         return availabilityMapper.toAvailabilityDtoResponse(availabilityRepository.save(availability));
     }
 
-    public void deleteAvailabilityForCurrentUser(Long availabilityId, String username) {
+    public void deleteAvailability(Long availabilityId) {
         Availability availability = availabilityRepository.findById(availabilityId).orElseThrow(
                 () -> new IllegalArgumentException("Availability not found"));
-        checkIfUserCanActOrThrow(username, availability.getUser().getUsername());
-
         availabilityRepository.delete(availability);
     }
 
@@ -103,12 +100,19 @@ public class AvailabilityService {
         AvailabilityRecurrence recurrence = availability.getRecurrence();
         ZonedDateTime recurrenceEnd = availability.getRecurrenceEndDate();
 
+        from = from.withZoneSameInstant(start.getZone());
+        to = to.withZoneSameInstant(start.getZone());
+
         while (start.isBefore(to) && (recurrenceEnd == null || start.isBefore(recurrenceEnd))) {
-            if (start.isAfter(from)) {
+            if (start.isBefore(to) && end.isAfter(from)) {
+                // Create a new slot that fits within the from and to range
+                ZonedDateTime slotStart = start.isAfter(from) ? start : from;
+                ZonedDateTime slotEnd = end.isBefore(to) ? end : to;
+
                 Availability slot = new Availability();
                 slot.setUser(availability.getUser());
-                slot.setStartDateTime(start);
-                slot.setEndDateTime(end);
+                slot.setStartDateTime(slotStart);
+                slot.setEndDateTime(slotEnd);
                 slots.add(slot);
             }
 
@@ -122,10 +126,6 @@ public class AvailabilityService {
                 case WEEKLY:
                     start = start.plusWeeks(1);
                     end = end.plusWeeks(1);
-                    break;
-                case FORTNIGHTLY:
-                    start = start.plusWeeks(2);
-                    end = end.plusWeeks(2);
                     break;
                 case WEEKDAYS:
                     do {
@@ -145,11 +145,5 @@ public class AvailabilityService {
         }
 
         return slots;
-    }
-
-    private void checkIfUserCanActOrThrow(String currentUsername, String usernameFromRequest) {
-        if (!currentUsername.equals(usernameFromRequest)) {
-            throw new IllegalStateException("User is not authorized");
-        }
     }
 }

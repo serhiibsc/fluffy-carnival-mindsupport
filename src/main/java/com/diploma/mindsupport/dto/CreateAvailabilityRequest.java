@@ -10,7 +10,6 @@ import java.time.ZonedDateTime;
 @Data
 @Builder
 public class CreateAvailabilityRequest {
-    private String username;
     private ZonedDateTime startDateTime;
     private ZonedDateTime endDateTime;
     private AvailabilityRecurrence recurrence;

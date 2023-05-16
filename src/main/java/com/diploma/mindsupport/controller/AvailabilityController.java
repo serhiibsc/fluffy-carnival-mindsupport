@@ -6,6 +6,7 @@ import com.diploma.mindsupport.dto.UpdateAvailabilityRequest;
 import com.diploma.mindsupport.service.AvailabilityService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -36,10 +37,9 @@ public class AvailabilityController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteAvailability(
-            @PathVariable("id") Long id,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        availabilityService.deleteAvailabilityForCurrentUser(id, userDetails.getUsername());
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<String> deleteAvailability(@PathVariable("id") Long id) {
+        availabilityService.deleteAvailability(id);
         return ResponseEntity.noContent().build();
     }
 }
