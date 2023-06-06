@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -70,6 +71,15 @@ public class AvailabilityService {
         return availabilityMapper.toAvailabilityDtoResponse(result);
     }
 
+    public AvailabilityDtoResponse getAvailabilityById(Long id, String username) {
+        Optional<Availability> optionalAvailability = availabilityRepository.findById(id);
+        Availability availability = optionalAvailability.orElseThrow();
+        if (!availability.getUser().getUsername().equals(username)) {
+            throw new IllegalStateException("User is not authorized for this resource");
+        }
+        return availabilityMapper.toAvailabilityDtoResponse(availability);
+    }
+
     public boolean isUserAvailable(User user, ZonedDateTime newStart, ZonedDateTime newEnd) {
         List<Availability> availabilities = availabilityRepository.findByUser(user);
         for (Availability availability : availabilities) {
@@ -81,15 +91,6 @@ public class AvailabilityService {
             }
         }
         return false;
-    }
-
-    public AvailabilityDtoResponse getAvailabilityById(Long id, String username) {
-        Optional<Availability> optionalAvailability = availabilityRepository.findById(id);
-        Availability availability = optionalAvailability.orElseThrow();
-        if (!availability.getUser().getUsername().equals(username)) {
-            throw new IllegalStateException("User is not authorized for this resource");
-        }
-        return availabilityMapper.toAvailabilityDtoResponse(availability);
     }
 
     private List<Availability> generateSlots(Availability availability, ZonedDateTime from, ZonedDateTime to) {
@@ -142,6 +143,54 @@ public class AvailabilityService {
                 default:
                     throw new IllegalArgumentException("Unknown recurrence: " + recurrence);
             }
+        }
+
+        return slots;
+    }
+
+    public boolean isIntersecting(Availability availability1, Availability availability2) {
+        ZonedDateTime start1 = availability1.getStartDateTime();
+        ZonedDateTime end1 = availability1.getEndDateTime();
+        ZonedDateTime start2 = availability2.getStartDateTime();
+        ZonedDateTime end2 = availability2.getEndDateTime();
+
+        // Check if the end time of the first availability is before the start time of the second availability
+        if (end1.isBefore(start2)) {
+            return false;
+        }
+
+        // Check if the start time of the first availability is after the end time of the second availability
+        if (start1.isAfter(end2)) {
+            return false;
+        }
+
+        // If none of the above conditions are met, there is an intersection
+        return true;
+    }
+
+    private List<Availability> generateSlotsForIntersection(Availability availability1, Availability availability2) {
+        ZonedDateTime start1 = availability1.getStartDateTime();
+        ZonedDateTime end1 = availability1.getEndDateTime();
+        ZonedDateTime start2 = availability2.getStartDateTime();
+        ZonedDateTime end2 = availability2.getEndDateTime();
+
+        // Determine the start and end times for the overlapping period
+        ZonedDateTime intersectionStart = start1.isBefore(start2) ? start2 : start1;
+        ZonedDateTime intersectionEnd = end1.isBefore(end2) ? end1 : end2;
+
+        // Create slots within the overlapping period
+        List<Availability> slots = new ArrayList<>();
+        ZonedDateTime slotStart = intersectionStart;
+        while (slotStart.isBefore(intersectionEnd)) {
+            long durationMinutes = Duration.between(
+                    availability1.getEndDateTime(), availability1.getStartDateTime()).toMinutes();
+            ZonedDateTime slotEnd = slotStart.plusMinutes(durationMinutes); // Adjust duration as needed
+            Availability slot = new Availability();
+            slot.setUser(availability1.getUser());
+            slot.setStartDateTime(slotStart);
+            slot.setEndDateTime(slotEnd);
+            slots.add(slot);
+            slotStart = slotEnd;
         }
 
         return slots;

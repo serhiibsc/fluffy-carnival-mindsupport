@@ -7,12 +7,14 @@ import com.diploma.mindsupport.mapper.RegisterRequestMapperImpl;
 import com.diploma.mindsupport.mapper.UserInfoMapperImpl;
 import com.diploma.mindsupport.model.User;
 import com.diploma.mindsupport.model.UserInfo;
+import com.diploma.mindsupport.model.UserRole;
 import com.diploma.mindsupport.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -52,5 +54,9 @@ public class UserService {
             throw new IllegalArgumentException();
         }
         return userOptional.get();
+    }
+
+    public List<User> getPsychologists() {
+        return userRepository.findAllByGrantedAuthoritiesContains(UserRole.VOLUNTEER);
     }
 }

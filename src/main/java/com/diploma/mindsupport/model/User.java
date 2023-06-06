@@ -64,6 +64,9 @@ public class User implements UserDetails {
     @OneToMany(mappedBy = "scheduledBy", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Appointment> scheduledAppointments = new ArrayList<>();
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserAnswer> userAnswers = new ArrayList<>();
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return grantedAuthorities;

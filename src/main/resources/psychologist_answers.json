@@ -1,0 +1,82 @@
+[
+  {
+    "question": "What is your gender identity?",
+    "options": {
+      "60": "Man"
+    },
+    "questionId": "11"
+  },
+  {
+    "question": "How do you identify?",
+    "options": {
+      "68": "Straight"
+    },
+    "questionId": "12"
+  },
+  {
+    "question": "What are your areas of expertise?",
+    "options": {
+      "78": "Mood Disorders",
+      "80": "Anxiety Disorders",
+      "81": "Stress Management",
+      "85": "Trauma and Loss",
+      "90": "Self-esteem",
+      "92": "Personal Development",
+      "93": "LGBTQ+ community therapy experience"
+    },
+    "questionId": "13"
+  },
+  {
+    "question": "What are you ready to help your patients with?",
+    "options": {
+      "94": "Listen to them",
+      "96": "Give motivation to learn and develop",
+      "97": "Give a home work to them",
+      "98": "Ready to actively participate in goal setting",
+      "99": "Open-minded attitude to patients who don't know their expectations",
+    },
+    "questionId": "14"
+  },
+  {
+    "question": "Are you interested in helping people to improve their overall health?",
+    "options": {
+      "104": "Yes"
+    },
+    "questionId": "16"
+  },
+  {
+    "question": "Are you willing to work with clients who are striving to improve their dietary habits?",
+    "options": {
+      "106": "Yes"
+    },
+    "questionId": "17"
+  },
+  {
+    "question": "Are you prepared to support clients who might be experiencing feelings of apathy?",
+    "options": {
+      "108": "Yes"
+    },
+    "questionId": "18"
+  },
+  {
+    "question": "Are you equipped to assist clients who may be dealing with exhaustion or fatigue?",
+    "options": {
+      "110": "Yes"
+    },
+    "questionId": "19"
+  },
+  {
+    "question": "Are you able to guide clients who are struggling with sleep issues?",
+    "options": {
+      "112": "Yes"
+    },
+    "questionId": "20"
+  },
+  {
+    "question": "Do you identify as part of the LGBTQ+ community?",
+    "options": {
+      "114": "Yes"
+    },
+    "questionId": "21"
+  }
+]
