@@ -11,7 +11,6 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.ZonedDateTime;
-import java.util.List;
 import java.util.Set;
 
 @Data
@@ -59,9 +58,6 @@ public class Appointment implements Serializable {
 
     @Column(columnDefinition = "timestamp")
     private final ZonedDateTime createdAt = ZonedDateTime.now();
-
-    private String zoomLink;
-    private Long zoomMeetingId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "scheduled_by_user_id")
