@@ -2,10 +2,7 @@ package com.diploma.mindsupport.model;
 
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -37,6 +34,13 @@ public class Appointment implements Serializable {
 
     @Transient
     private Duration duration;
+
+    @EqualsAndHashCode.Exclude
+    @ManyToOne(
+            cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+            fetch = FetchType.LAZY)
+    @JoinColumn(name = "course_id", referencedColumnName = "courseId")
+    private Course course;
 
     @Column(name = "duration")
     private Long durationSeconds;
