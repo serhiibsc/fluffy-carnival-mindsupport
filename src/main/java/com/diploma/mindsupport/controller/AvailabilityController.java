@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/availability")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:3000")
 public class AvailabilityController {
     private final AvailabilityService availabilityService;
 

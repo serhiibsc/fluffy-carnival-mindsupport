@@ -1,9 +1,7 @@
 package com.diploma.mindsupport.controller;
 
 import com.diploma.mindsupport.dto.AppointmentDtoResponse;
-import com.diploma.mindsupport.dto.AvailabilityDtoResponse;
 import com.diploma.mindsupport.dto.UpdateAppointmentRequest;
-import com.diploma.mindsupport.dto.UpdateAvailabilityRequest;
 import com.diploma.mindsupport.service.AppointmentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:3000")
 @RequestMapping("/api/v1/appointment")
 public class AppointmentController {
     private final AppointmentService appointmentService;

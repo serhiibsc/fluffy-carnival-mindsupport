@@ -1,9 +1,6 @@
 package com.diploma.mindsupport.service;
 
-import com.diploma.mindsupport.dto.AuthenticationRequest;
-import com.diploma.mindsupport.dto.AuthenticationResponse;
-import com.diploma.mindsupport.dto.JwtSubjectDto;
-import com.diploma.mindsupport.dto.RegisterRequest;
+import com.diploma.mindsupport.dto.*;
 import com.diploma.mindsupport.model.UserRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -56,5 +53,10 @@ public class AuthenticationService {
                 .expiresIn(EXPIRES_IN_SEC)
                 .token(jwtToken)
                 .build();
+    }
+
+    public void registerMultiple(MultipleRegisterRequest request) {
+        request.getUserDtoList().stream().map(UserDto::getUser).forEach(this::register);
+        request.getUserDtoList().forEach(dto -> userService.updateUserInfo(dto.getUserInfoDto(), dto.getUser().getUsername()));
     }
 }

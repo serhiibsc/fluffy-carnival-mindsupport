@@ -3,6 +3,7 @@ package com.diploma.mindsupport.controller;
 
 import com.diploma.mindsupport.dto.AuthenticationRequest;
 import com.diploma.mindsupport.dto.AuthenticationResponse;
+import com.diploma.mindsupport.dto.MultipleRegisterRequest;
 import com.diploma.mindsupport.dto.RegisterRequest;
 import com.diploma.mindsupport.service.AuthenticationService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,12 @@ public class AuthenticationController {
     @PostMapping("/register")
     public ResponseEntity<AuthenticationResponse> register(@RequestBody RegisterRequest request) {
         return ResponseEntity.ok(service.register(request));
+    }
+
+    @PostMapping("/register/multiple")
+    public ResponseEntity<String> register(@RequestBody MultipleRegisterRequest request) {
+        service.registerMultiple(request);
+        return ResponseEntity.ok("Done");
     }
 
     @PostMapping
