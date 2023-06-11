@@ -22,17 +22,22 @@ public interface UserInfoMapper {
 
         UserProfileInfoResponse.UserProfileInfoResponseBuilder userProfileInfoResponse = UserProfileInfoResponse.builder();
 
+        userProfileInfoResponse.userRole(userToUserRole(user));
+        userProfileInfoResponse.lastName(user.getLastName());
+        userProfileInfoResponse.username(user.getUsername());
+        userProfileInfoResponse.email(user.getEmail());
+        userProfileInfoResponse.firstName(user.getFirstName());
+
+        if (user.getUserInfo() == null) {
+            return userProfileInfoResponse.build();
+        }
+
         userProfileInfoResponse.dateOfBirth(user.getUserInfo().getDateOfBirth());
         userProfileInfoResponse.gender(user.getUserInfo().getGender());
         userProfileInfoResponse.language(user.getUserInfo().getLanguage());
         userProfileInfoResponse.country(user.getUserInfo().getCountry());
         userProfileInfoResponse.city(user.getUserInfo().getCity());
         userProfileInfoResponse.about(user.getUserInfo().getAbout());
-        userProfileInfoResponse.username(user.getUsername());
-        userProfileInfoResponse.email(user.getEmail());
-        userProfileInfoResponse.firstName(user.getFirstName());
-        userProfileInfoResponse.lastName(user.getLastName());
-        userProfileInfoResponse.userRole(userToUserRole(user));
         userProfileInfoResponse.imageList(userPhotoToImageList(user.getUserInfo().getPhoto()));
 
         return userProfileInfoResponse.build();

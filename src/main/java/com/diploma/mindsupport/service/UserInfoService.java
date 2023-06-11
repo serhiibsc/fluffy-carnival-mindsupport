@@ -27,7 +27,7 @@ public class UserInfoService {
             userInfo = user.getUserInfo();
         } else {
             userInfo = new UserInfo();
-            userInfo.setUserId(user.getUserId());
+            userInfo.setId(user.getUserId());
         }
         userInfo.setPhoto(imageMapper.imageDtoToImage(imageDto));
         userInfoRepository.save(userInfo);

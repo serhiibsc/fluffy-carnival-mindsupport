@@ -16,7 +16,8 @@ public class UserInfo implements Serializable {
     private static final long serialVersionUID = 176672693508487132L;
 
     @Id
-    private Long userId;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
 
     @EqualsAndHashCode.Exclude
     @OneToOne(
@@ -33,6 +34,7 @@ public class UserInfo implements Serializable {
     private String city;
     private String country;
     private String phone;
+    private String telegramUsername;
 
     @EqualsAndHashCode.Exclude
     @OneToOne(

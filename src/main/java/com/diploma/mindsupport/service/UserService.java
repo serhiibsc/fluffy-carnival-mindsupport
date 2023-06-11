@@ -29,7 +29,7 @@ public class UserService {
     public void updateUserInfo(UserInfoDto userInfoDto, String username) {
         User user = getUserByUsernameOrThrow(username);
         UserInfo userInfo = userInfoMapper.userInfoDtoToUserInfo(userInfoDto);
-        userInfo.setUserId(user.getUserId());
+        userInfo.setId(user.getUserId());
         user.setUserInfo(userInfo);
         userRepository.save(user);
     }
