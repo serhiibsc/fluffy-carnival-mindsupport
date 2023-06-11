@@ -53,6 +53,13 @@ public class User implements UserDetails {
             referencedColumnName = "userId")
     private UserInfo userInfo;
 
+    @EqualsAndHashCode.Exclude
+    @ManyToMany(
+            cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+            fetch = FetchType.LAZY)
+    @JoinColumn(name = "course_id", referencedColumnName = "courseId")
+    private List<Course> courses;
+
     @ElementCollection(targetClass = UserRole.class, fetch = FetchType.EAGER)
     @CollectionTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "userId"))
     @Enumerated(EnumType.STRING)
